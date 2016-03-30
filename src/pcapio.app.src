@@ -1,0 +1,8 @@
+{application, pcapio, [
+  {description, "PCAP and PCAPNG files access library"},
+  {vsn, "0.0.1"},
+  {registered, []},
+  {modules, [pcap, pcapng]},
+  {applications, []},
+  {env, []}
+]}.
