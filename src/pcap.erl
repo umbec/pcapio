@@ -19,16 +19,15 @@ decode(Bin) when not is_binary(Bin) ->
   {error, param};
 decode(Bin) when size(Bin) < ?PCAP_GH_SIZE ->
   {error, invalid_len};
-decode(Bin) ->
-  <<Magic:32/native-unsigned, 
-    VM:16/native-unsigned-integer,
-    Vm:16/native-unsigned-integer,
-    Rest/binary>> = Bin,
+decode(<<Magic:32/native-unsigned, 
+         VM:16/native-unsigned-integer,
+         Vm:16/native-unsigned-integer,
+         _Rest/binary>> = Bin) ->
   case Magic of
   ?PCAP_MAGIC_NUM ->
     case {VM, Vm} of
     {2, 4} ->
-      Ret = decode_global_header(Rest),
+      Ret = decode_global_header(Bin),
       {ok, Ret};
     {_,_} ->
       {error, unsupported_version}
@@ -39,7 +38,7 @@ decode(Bin) ->
 
 decode_global_header(Bin) ->
   Gh = erlang:binary_part(Bin, {0, ?PCAP_GH_SIZE}),
-  Rest = erlang:binary_part(Bin, {?PCAP_GH_SIZE, byte_size(Bin)-?PCAP_GH_SIZE}),
+  Rest = erlang:binary_part(Bin, {?PCAP_GH_SIZE, byte_size(Bin) - ?PCAP_GH_SIZE}),
   {decode_gh(Gh), Rest}.
 
 
@@ -49,14 +48,19 @@ decode_blocks(Bin) ->
 decode_blocks(<<>>, Blocks) ->
   lists:reverse(Blocks);
 decode_blocks(Bin, Blocks) when byte_size(Bin) >= ?PCAP_PH_SIZE ->
+  {ok, Dec, Rest} = decode_block(Bin),
+  decode_blocks(Rest, [Dec | Blocks]);
+decode_blocks(_, _) ->
+  erlang:error(invalid_block).
+
+decode_block(Bin) when byte_size(Bin) >= ?PCAP_PH_SIZE ->
   Ph = erlang:binary_part(Bin, {0, ?PCAP_PH_SIZE}),
   Dph = decode_ph(Ph),
   Plen = Dph#pcap_ph.incl_len,
   Payload = erlang:binary_part(Bin, {?PCAP_PH_SIZE, Plen}),
-  Rest = erlang:binary_part(Bin, {byte_size(Bin), -?PCAP_PH_SIZE -Plen}),
-  decode_blocks(Rest, [Dph#pcap_ph{data = Payload}|Blocks]);
-decode_blocks(_, _) ->
-  erlang:error(invalid_block).
+  BlockLen = ?PCAP_PH_SIZE + Plen,
+  Rest = erlang:binary_part(Bin, {BlockLen, byte_size(Bin) - BlockLen}),
+  {ok, Dph#pcap_ph{data = Payload}, Rest}.
 
 encode_header(#pcap_gh{magic_number=Mn,
                      version_major=VM,

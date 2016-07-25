@@ -42,7 +42,6 @@ decode_blocks([Block | T], DecBlocks) ->
 			erlang:error(invalid_block_total_len)
 	end.
 
-
 decode_block(?SHB_TYPE, _Len, _Body) ->
 	#pcapng_shb{};
 decode_block(?IDB_TYPE, _Len, _Body) ->
