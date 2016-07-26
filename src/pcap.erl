@@ -1,13 +1,22 @@
+%%%-------------------------------------------------------------------
+%%% @author Umberto Corponi
+%%% @copyright (C) 2016, Umberto Corponi
+%%% @doc
+%%%
+%%% @end
+%%% Created : 26. Jul 2016 14.09
+%%%-------------------------------------------------------------------
+
 -module(pcap).
 
 -export([decode/1,
          decode_blocks/1,
          decode_global_header/1,
-         encode_header/1,
          decode_gh/1,
          decode_ph/1]).
 
 -include("../include/pcap.hrl").
+-include("pcapio_internal.hrl").
 
 -spec decode(Bin) -> Resp when
    Bin  :: binary(),
@@ -33,7 +42,7 @@ decode(<<Magic:32/native-unsigned,
       {error, unsupported_version}
     end;
   _ ->
-    {error, invalid_magic_number}
+    {error, ?INVALID_MAGIC}
   end.
 
 decode_global_header(Bin) ->
@@ -62,29 +71,6 @@ decode_block(Bin) when byte_size(Bin) >= ?PCAP_PH_SIZE ->
   Rest = erlang:binary_part(Bin, {BlockLen, byte_size(Bin) - BlockLen}),
   {ok, Dph#pcap_ph{data = Payload}, Rest}.
 
-encode_header(#pcap_gh{magic_number=Mn,
-                     version_major=VM,
-                     version_minor=Vm,
-                     thiszone=Tz,
-                     sigfigs=Sf,
-                     snaplen=Sl,
-                     network=Nw}) ->
-  <<Mn:32/native-unsigned-integer,
-    VM:16/native-unsigned-integer,
-    Vm:16/native-unsigned-integer,
-    Tz:32/native-signed-integer,
-    Sf:32/native-unsigned-integer,
-    Sl:32/native-unsigned-integer,
-    Nw:32/native-unsigned-integer>>;
-
-encode_header(#pcap_ph{ts_sec=Tss,
-                     ts_usec=Tsu,
-                     incl_len=Il,
-                     orig_len=Ul}) ->
-  <<Tss:32/native-unsigned-integer,
-    Tsu:32/native-unsigned-integer,
-    Il:32/native-unsigned-integer,
-    Ul:32/native-unsigned-integer>>.
 
 decode_gh(<<Mn:32/native-unsigned-integer,
       VM:16/native-unsigned-integer,

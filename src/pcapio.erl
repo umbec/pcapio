@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author Umberto Corponi
-%%% @copyright (C) 2016, <COMPANY>
+%%% @copyright (C) 2016, Umberto Corponi
 %%% @doc
 %%%
 %%% @end
@@ -14,17 +14,32 @@
 -include("../include/pcapng.hrl").
 
 %% API
--export([decode/1]).
+-export([file_format/1,
+         decode/1]).
 
-decode(<<?PCAP_MAGIC_NUM:32/big, _/binary>> = Bin) when is_binary(Bin) ->
-  pcap:decode(Bin);
-decode(<<?PCAP_MAGIC_NUM:32/little, _/binary>> = Bin) when is_binary(Bin) ->
-  pcap:decode(Bin);
-decode(<<_:32, _:32, ?PCAPNG_MAGIC_NUM:32/big, _/binary>> = Bin) when is_binary(Bin) ->
-  pcapng:decode(Bin);
-decode(<<_:32, _:32, ?PCAPNG_MAGIC_NUM:32/little, _/binary>> = Bin) when is_binary(Bin) ->
-  pcapng:decode(Bin);
-decode(<<_:32, _:32, ?PCAPNG_MAGIC_NUM:32/little, _/binary>> = Bin) when is_binary(Bin) ->
+%%%-------------------------------------------------------------------
+
+file_format(Bin) when not is_binary(Bin) ->
+  {error, badarg};
+file_format(<<?PCAP_MAGIC_NUM:32/big, _/binary>>) ->
+  {pcap, big};
+file_format(<<?PCAP_MAGIC_NUM:32/little, _/binary>>) ->
+  {pcap, little};
+file_format(<<_:32, _:32, ?PCAPNG_MAGIC_NUM:32/big, _/binary>>) ->
+  {pcapng, big};
+file_format(<<_:32, _:32, ?PCAPNG_MAGIC_NUM:32/little, _/binary>>) ->
+  {pcapng, little};
+file_format(_) ->
   {error, ?INVALID_FILE}.
 
+%%%-------------------------------------------------------------------
+
+decode(Bin) when not is_binary(Bin) ->
+  {error, badarg};
+decode(Bin) ->
+  case file_format(Bin) of
+    {error, Reason} -> {error, Reason};
+    {pcap, _Endian} -> pcap:decode(Bin);
+    {pcapng, _Endian} -> pcapng:decode(Bin)
+  end.
 

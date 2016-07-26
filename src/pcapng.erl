@@ -1,10 +1,18 @@
+%%%-------------------------------------------------------------------
+%%% @author Umberto Corponi
+%%% @copyright (C) 2016, Umberto Corponi
+%%% @doc
+%%%
+%%% @end
+%%% Created : 26. Jul 2016 14.09
+%%%-------------------------------------------------------------------
+
 -module(pcapng).
 
 -export([decode/1]).
 
 -include("../include/pcapng.hrl").
 -include("pcapio_internal.hrl").
-
 
 
 decode(Bin) when is_binary(Bin) ->
@@ -25,10 +33,10 @@ decode_block(_Endian, Block) when byte_size(Block) < 12 ->
 decode_block(Endian, Block) ->
   if
     Endian =:= big ->
-      <<Type:32/big, TotLen:32/big, Rest/big>> = Block,
+      <<Type:32/big, TotLen:32/big, Rest/binary>> = Block,
       <<EndTotLen:32/big>> = erlang:binary_part(Rest, {byte_size(Rest), -4});
     Endian =:= little ->
-      <<Type:32/little, TotLen:32/little, Rest/little>> = Block,
+      <<Type:32/little, TotLen:32/little, Rest/binary>> = Block,
       <<EndTotLen:32/little>> = erlang:binary_part(Rest, {byte_size(Rest), -4})
   end,
   TotLen /= EndTotLen andalso erlang:error(?INVALID_BLOCK_LEN),
