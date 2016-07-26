@@ -1,4 +1,7 @@
 
+-ifndef(pcapng_hrl).
+-define(pcapng_hrl, true).
+
 %% ============================================================================
 %% PCAPNG file format 
 %% [http://www.tcpdump.org/pcap/pcap.html]
@@ -12,12 +15,12 @@
 -define(SHB_UNDEF_SEC_LEN, 16#FFFFFFFFFFFFFFFF). %% Length of section is undefined
 
 -record(pcapng_shb, {
-		total_len,                        %% u32 total lenght (block included)
-		magic_number = ?PCAPNG_MAGIC_NUM, %% u32 magic number
-        version_major = 1,                %% u16 major version number
-        version_minor = 0,                %% u16 minor version number
-		section_len = ?SHB_UNDEF_SEC_LEN,
-		options = []
+    total_len,                        %% u32 total lenght (block included)
+    magic_number = ?PCAPNG_MAGIC_NUM, %% u32 magic number
+    version_major = 1,                %% u16 major version number
+    version_minor = 0,                %% u16 minor version number
+    section_len = ?SHB_UNDEF_SEC_LEN,
+    options = []
 	}).
 
 %% Interface Description Block ------------------------------------------------
@@ -26,7 +29,7 @@
 
 -record(pcapng_idb, {
 	total_len,                        %% u32 total lenght (block included)
-    link_type = 1,                    %% u16 link toe
+  link_type = 1,                    %% u16 link toe
 	snaplen,
 	options = []
 }).
@@ -37,7 +40,7 @@
 
 -record(pcapng_epb, {
 	total_len,                        %% u32 total lenght (block included)
-    interface_id,
+  interface_id,
 	timestamp_h,
 	timestamp_l,
 	captured_len,
@@ -72,7 +75,7 @@
 
 -record(pcapng_isb, {
 	total_len,                        %% u32 total lenght (block included)
-    interface_id,
+	interface_id,
 	timestamp_h,
 	timestamp_l,
 	options = []
@@ -86,8 +89,9 @@
 -record(pcapng_cb, {
 	type = ?CB_TYPE, 
 	total_len,                        %% u32 total lenght (block included)
-    enterprise_number,
+	enterprise_number,
 	data,
 	options = []
 }).
 
+-endif.
